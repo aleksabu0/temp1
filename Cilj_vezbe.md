@@ -1,0 +1,3 @@
+#Prvi drajver
+Cilj ove vezbe je da se krene od jednostavnog "Storage" drajvera koji samo ispisuje poruke u terminalu (na cemu smo stali prosli cas), i da se napravi drajver koji ce moci da cuva 10 celobrojnih vrednosti. Upis na neku od 10 pozicija se vrsi komandom echo "vrednost,pozicija" >/dev/storage. Citanje se vrsi pomocu funkcije cat pri cemu se ispisuju svih deset vrednosti. Resenje je dato u "Storage_complete" direktorijumu.
+Napravljena je dodatna verzija prethodnog drajvera - Storage_multiple_minors kod koje se svakom elementu u nizu moze pristupiti preko  posebnog node fajla u /dev direktorijumu. Dakle, postoje /dev/storage0, /dev/storage1 .... /dev/storage9
