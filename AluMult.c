@@ -273,8 +273,8 @@ static int __init alu_init(void)
 {
     int ret = 0;
 	int i=0;
+	char buff[11];
 	sema_init(&sem,1);
-	char buff[10];
 	//Initialize array
 	for (i=0; i<6; i++)
 		alu[i] = 0;
@@ -299,27 +299,27 @@ static int __init alu_init(void)
     printk(KERN_INFO "created nod %d\n", i);
 	if(i==0)
 	{	
-		scnprintf(buff, 10, "alu_regA");
+		scnprintf(buff, 11, "alu_regA");
 	}
 	else if(i==1)
 	{
-		scnprintf(buff, 10, "alu_regB");
+		scnprintf(buff, 11, "alu_regB");
 	}
 	else if(i==2)
 	{
-		scnprintf(buff, 10, "alu_regC");
+		scnprintf(buff, 11, "alu_regC");
 	}
 	else if(i==3)
 	{
-		scnprintf(buff, 10, "alu_regD");
+		scnprintf(buff, 11, "alu_regD");
 	}	
 	else if(i==4)
 	{
-		scnprintf(buff, 10, "alu_result");
+		scnprintf(buff, 11, "alu_result");
 	}
 	else if(i==5)
 	{
-		scnprintf(buff, 10, "alu_op");
+		scnprintf(buff, 11, "alu_op");
 	}
     my_device = device_create(my_class, NULL, MKDEV(MAJOR(my_dev_id), i), NULL, buff);
     if (my_device == NULL){
