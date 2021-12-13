@@ -67,6 +67,14 @@ ssize_t alu_read(struct file *pfile, char __user *buffer, size_t length, loff_t 
 	char buff[BUFF_SIZE];
 	long int len=0;
 	int minor = MINOR(pfile->f_inode->i_rdev);
+	
+	if (endRead){
+		endRead = 0;
+		printk(KERN_INFO "Succesfully read from file\n");
+		pos1=0;
+		return 0;
+	}
+	
 	if(minor==5)
 	{
 		en=0;
@@ -75,7 +83,6 @@ ssize_t alu_read(struct file *pfile, char __user *buffer, size_t length, loff_t 
 	else if (en==1)
 	{	
 		pos1=minor;
-		en=1;
 	}
 	/*if(pos1<4)
 	{
@@ -115,13 +122,6 @@ ssize_t alu_read(struct file *pfile, char __user *buffer, size_t length, loff_t 
 	
 	/*up(&sem);
 	wake_up_interruptible(&writeQ);*/
-	
-	if (endRead){
-		endRead = 0;
-		printk(KERN_INFO "Succesfully read from file\n");
-		pos1=0;
-		return 0;
-	}
 	
 	return len;
 }
