@@ -63,9 +63,20 @@ int alu_close(struct inode *pinode, struct file *pfile)
 ssize_t alu_read(struct file *pfile, char __user *buffer, size_t length, loff_t *offset) 
 {
 	int ret;
+	int en=1;
 	char buff[BUFF_SIZE];
 	long int len=0;
 	int minor = MINOR(pfile->f_inode->i_rdev);
+	if(minor==5)
+	{
+		en=0;
+		pos1=6;
+	}
+	else if (en==1)
+	{	
+		pos1=minor;
+		en=1;
+	}
 	/*if(pos1<4)
 	{
 		printk(KERN_INFO "Potrebno je izvrsiti operaciju pre sledeceg citanja\n");
@@ -82,43 +93,21 @@ ssize_t alu_read(struct file *pfile, char __user *buffer, size_t length, loff_t 
 		if(down_interruptible(&sem))
 			return -ERESTARTSYS;
 	}*/
-	if(pos1>=4 && pos1<6)
+	if(en>0 && pos1<6)
 	{	
-		if(form==1)
-		{
-			len = scnprintf(buff,BUFF_SIZE , "%d ", alu[pos1]);
-		}
-		else if (form==2)
-		{
-			int i;
-			int a[10];
-			int n=alu[pos1];
-			int var1=0;
-			int cnt;
-			int exp=1;
-			for(i=0;n>0;i++)    
-			{    
-				a[i]=n%2;    
-				n=n/2;
-				cnt=i;
-			}  
-			for(i=0;i<=cnt;i++)
-			{
-				var1+=a[i]*exp;
-				exp=exp*10;
-			}
-			alu[pos1]=var1;
-			len = scnprintf(buff,BUFF_SIZE , "%d ", alu[pos1]);
-			
-		}
-		else if (form==3)
-		{
-			len = scnprintf(buff,BUFF_SIZE , "%x ", alu[pos1]);
-		}	
+		len = scnprintf(buff,BUFF_SIZE , "%d ", alu[pos1]);
 		ret = copy_to_user(buffer, buff, len);
 		if(ret)
 			return -EFAULT;
-		pos1 ++;
+		if(pos1==4)
+		{	
+			pos1 ++;
+		}
+		else
+		{
+			pos1==6;
+		}	
+		en=2;
 	}
 	else if (pos1 == 6) {
 		endRead = 1;
@@ -147,7 +136,7 @@ ssize_t alu_write(struct file *pfile, const char __user *buffer, size_t length, 
 	int value;
 	int ret;
 	int result;
-	int minor = MINOR(pfile->f_inode->i_rdev);
+	int minor = MINOR(pfile->f_inode->i_rdev); 
 	ret = copy_from_user(buff, buffer, length);
 	if(ret)
 		return -EFAULT;
@@ -168,55 +157,27 @@ ssize_t alu_write(struct file *pfile, const char __user *buffer, size_t length, 
 			return -ERESTARTSYS;
 	}*/
 	
-	if(pos1<4 && pos2<4)
-		{	
-		ret = sscanf(buff,"%4s=%d",position1,&value);
-		if(ret!=2)
+	if(minor!=4)
+	{	
+		ret = sscanf(buff,"%d",&value);
+		if(ret!=1)
 		{
-			ret=sscanf(buff,"%4s%*c%1s%*c%4s",position1,operation,position2);
-			if(ret!=3)
-			{
-				ret=sscanf(buff,"format=%3s",format);
-			}	
+			ret=sscanf(buff,"%4s%*c%1s%*c%4s",position1,operation,position2);	
 		}	
 			
 		//VARIJANTA 1 UNOS VREDNOSTI U REGISTAR
-		if(ret==2)
+		if(minor<4 && ret==1)
 		{	
-			if(strcmp(position1,"regA")==0)
-			{
-				pos1=0;
-			}
-			else if(strcmp(position1,"regB")==0)
-			{
-				pos1=1;
-			}
-			else if(strcmp(position1,"regC")==0)
-			{
-				pos1=2;
-			}
-			else if(strcmp(position1,"regD")==0)
-			{
-				pos1=3;
-			}
-			
 			if(value >=0 && value <256)
 			{
-				if(pos1 >=0 && pos1 <=3)
-				{
 					alu[pos1] = value; 
 					printk(KERN_INFO "Succesfully wrote value in  register\n"); 
-				}
-				else
-				{
-					printk(KERN_WARNING "Register should be between A and D\n"); 
-				}
 			}
 		}
 		
 		//VARIJANTA 2 OPERACIJA SA REGISTRIMA
 		
-		else if (ret==3)
+		else if (minor==5 && ret==3) //kada je vrednost 5 jer to je minor broj za alu_op
 		{
 			//prvi registar
 			if(strcmp(position1,"regA")==0)
@@ -295,23 +256,6 @@ ssize_t alu_write(struct file *pfile, const char __user *buffer, size_t length, 
 				pos1=4;
 			}
 			
-		}
-		//VARIJANTA 3 Unos formata
-		else if (ret==1)
-		{
-			if(strcmp(format,"dec")==0)
-			{
-				form=1;
-			}
-			else if(strcmp(format,"bin")==0)
-			{
-				form=2;
-			}
-			else if(strcmp(format,"hex")==0)
-			{
-				form=3;
-			}
-			
 		}	
 	}
 	else
@@ -330,7 +274,7 @@ static int __init alu_init(void)
     int ret = 0;
 	int i=0;
 	sema_init(&sem,1);
-
+	char buff[10];
 	//Initialize array
 	for (i=0; i<6; i++)
 		alu[i] = 0;
@@ -371,11 +315,11 @@ static int __init alu_init(void)
 	}	
 	else if(i==4)
 	{
-		scnprintf(buff, 10, "alu_op");
+		scnprintf(buff, 10, "alu_result");
 	}
 	else if(i==5)
 	{
-		scnprintf(buff, 10, "alu_result");
+		scnprintf(buff, 10, "alu_op");
 	}
     my_device = device_create(my_class, NULL, MKDEV(MAJOR(my_dev_id), i), NULL, buff);
     if (my_device == NULL){
@@ -411,6 +355,7 @@ static int __init alu_init(void)
 
 static void __exit alu_exit(void)
 {
+	int i =0;
    cdev_del(my_cdev);
    for (i = 0; i < num_of_minors; i++) // every node made must be destroyed
     device_destroy(my_class, MKDEV(MAJOR(my_dev_id), i));
