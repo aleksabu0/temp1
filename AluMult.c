@@ -105,7 +105,7 @@ ssize_t alu_read(struct file *pfile, char __user *buffer, size_t length, loff_t 
 		}
 		else
 		{
-			pos1==6;
+			endRead = 1;
 		}	
 		en=2;
 	}
@@ -297,6 +297,7 @@ static int __init alu_init(void)
   for (i = 0; i < num_of_minors; i++)
   {
     printk(KERN_INFO "created nod %d\n", i);
+	//ime za node
 	if(i==0)
 	{	
 		scnprintf(buff, 11, "alu_regA");
@@ -321,6 +322,7 @@ static int __init alu_init(void)
 	{
 		scnprintf(buff, 11, "alu_op");
 	}
+	
     my_device = device_create(my_class, NULL, MKDEV(MAJOR(my_dev_id), i), NULL, buff);
     if (my_device == NULL){
       printk(KERN_ERR "failed to create device\n");
@@ -333,7 +335,7 @@ static int __init alu_init(void)
 	my_cdev = cdev_alloc();	
 	my_cdev->ops = &my_fops;
 	my_cdev->owner = THIS_MODULE;
-	ret = cdev_add(my_cdev, my_dev_id, 1);
+	ret = cdev_add(my_cdev, my_dev_id, num_of_minors);
 	if (ret)
 	{
       printk(KERN_ERR "failed to add cdev\n");
