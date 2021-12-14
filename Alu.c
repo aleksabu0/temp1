@@ -20,10 +20,6 @@ static struct class *my_class;
 static struct device *my_device;
 static struct cdev *my_cdev;
 
-DECLARE_WAIT_QUEUE_HEAD(readQ);
-DECLARE_WAIT_QUEUE_HEAD(writeQ);
-struct semaphore sem;
-
 
 int alu[6];
 int pos1 = 0;
@@ -69,17 +65,6 @@ ssize_t alu_read(struct file *pfile, char __user *buffer, size_t length, loff_t 
 		printk(KERN_INFO "Potrebno je izvrsiti operaciju pre sledeceg citanja\n");
 	}	
 	
-	if(down_interruptible(&sem))
-		return -ERESTARTSYS;
-	
-	while(pos1 < 4)
-	{
-		up(&sem);
-		if(wait_event_interruptible(readQ,(pos1>=4)))
-			return -ERESTARTSYS;
-		if(down_interruptible(&sem))
-			return -ERESTARTSYS;
-	}
 	if(pos1>=4 && pos1<6)
 	{	
 		if(form==1)
@@ -122,8 +107,6 @@ ssize_t alu_read(struct file *pfile, char __user *buffer, size_t length, loff_t 
 		endRead = 1;
 	}
 	
-	up(&sem);
-	wake_up_interruptible(&writeQ);
 	
 	if (endRead){
 		endRead = 0;
@@ -150,20 +133,6 @@ ssize_t alu_write(struct file *pfile, const char __user *buffer, size_t length, 
 		return -EFAULT;
 	buff[length-1] = '\0';
 	
-	if(pos1>=4 || pos2>=4)
-	{
-		printk(KERN_INFO "Potrebno je izvrsiti citanje pre sledece operacije\n");
-	}	
-	if(down_interruptible(&sem))
-		return -ERESTARTSYS;
-	while(pos1 >= 4 || pos2 >=4)
-	{
-		up(&sem);
-		if(wait_event_interruptible(writeQ,(pos1<4 && pos2<4)))
-			return -ERESTARTSYS;
-		if(down_interruptible(&sem))
-			return -ERESTARTSYS;
-	}
 	
 	if(pos1<4 && pos2<4)
 		{	
@@ -316,9 +285,6 @@ ssize_t alu_write(struct file *pfile, const char __user *buffer, size_t length, 
 		printk(KERN_WARNING "Wrong command format\nexpected: regX=num\n X=A,B,C,D\n\num={0-255}\n");
 	}
 	
-	up(&sem);
-	wake_up_interruptible(&readQ);
-
 	return length;
 }
 
@@ -326,7 +292,6 @@ static int __init alu_init(void)
 {
     int ret = 0;
 	int i=0;
-	sema_init(&sem,1);
 
 	//Initialize array
 	for (i=0; i<6; i++)
