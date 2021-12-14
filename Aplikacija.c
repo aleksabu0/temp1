@@ -87,7 +87,7 @@ int operacija_nad_registrima(char regx, char regy, char op){
 void set_register(char reg, int val){
 	fp = fopen("/dev/alu", "w");
 	char buff[30];
-	sprintf(buff, "reg%c=0x%x\n", reg, val);
+	sprintf(buff, "reg%c=%d\n", reg, val);
 	//printf("%s\n", buff);
 	fputs(buff, fp);
 	fclose(fp);
@@ -117,11 +117,6 @@ void perform_op(char op){
 
 int main(){
 	char str[30];
-	fp = fopen("/dev/alu", "w");
-	sprintf(str, "format=dec\n");
-	fputs(str, fp);
-	fclose(fp);
-
 	char buff[BUFF_MAX];
 	char RPN[2*BUFF_MAX];
 	struct StackNode* root = NULL;
@@ -246,7 +241,7 @@ input:
 	
 	while(!isEmpty(root)){
 		char temp = pop(&root);
-		//printf("temp: %c\n", temp);
+
 
 		if(temp != '('){
 		if(RPN[rpn_pos-1] != ' '){
@@ -258,10 +253,10 @@ input:
 		RPN[rpn_pos] = temp;
 		rpn_pos++;
 	}else rpn_pos--;
-		//printf("pooped %c\n", pop(&root));			
+		
 	}
 
-	if(RPN[1] == ' '){//kada je prvi broj jednocifren pravi problem, pa sam dodao 0 pre broja, tako radi
+	if(RPN[1] == ' '){
 		char temp[2*BUFF_MAX+2];
 		sprintf(temp, "0%s", RPN);
 		sprintf(RPN, "%s", temp);
@@ -271,7 +266,6 @@ input:
 	while(RPN[rpn_pos] == ' ') rpn_pos--;
 	rpn_pos++;
 
-	//printf("%s\n", RPN);
 	for(i=0;i<rpn_pos;i++) printf("%c", RPN[i]);
 	printf("\n");
 	i = 0;
@@ -279,12 +273,6 @@ input:
 	//--------razresavanja RPN preko steka----------//
 	char val1_str[10]={' ',' ',' '}; 
 	char val2_str[10]={' ',' ',' '};
-/*
-		while(RPN[i]!= ' '){
-			val_str[i]=RPN[i];
-			i++;
-		}
-*/
 
 		int stack_pos = 0;
 		i = 0;
@@ -299,12 +287,10 @@ input:
 		i = 0;
 		char op = pop(&root);
 		pop(&root);
-		//printf("op je %c\n", op);
 		while(1){
 			char temp = pop(&root);
 			val2_str[3-i]=temp;
 			i++;
-			//printf("val2 od %d je %c\n", 4-i, temp);
 			if(temp == ' ' || isEmpty(root)) break;
 		}
 
@@ -313,12 +299,10 @@ input:
 			char temp = pop(&root);
 			val1_str[3-i]=temp;
 			i++;
-			//printf("%c\n", temp);
 			if(temp == ' ' || isEmpty(root)) break;
 		}
 		int val1 = string_to_int(val1_str);
 		int val2 = string_to_int(val2_str);
-		//printf("\nval1: %s\nval2: %s\n", val1_str, val2_str);
 		set_register('a', val1);
 		set_register('b', val2);
 		for(i=0;i<5;i++){
@@ -329,15 +313,8 @@ input:
 		perform_op(op);
 		res = read_result();
 		if(res == -1) goto input;
-		//printf("val1 %d\nval2 %d\n", val1, val2);
-
-		//res = perform_op(val1, val2, op);
-		//printf("%d %c %d = %d\n\n", val1,op,val2,res);
-		//push(&root, res);
-		//printf("res je %d\n", res);
 		char res_str[4] = {' ', ' ', ' ', ' '};
 		sprintf(res_str, "%d", res);
-		//strcat(res_str, " ");
 		i = 0;
 		push(&root, ' ');
 		for(i = 0; i<4;i++){
@@ -345,23 +322,12 @@ input:
 			push(&root, res_str[i]);
 		}
 }
-		//while(val2_str[i] != ' '){
-		//	val2_str[4-i] = pop(&root);
-		//	i++;
-		//}
-
-		//printf("%d\n", string_to_int(val1_str));
-
 		while(!isEmpty(root)){
-					pop(&root);
-					//printf("pooped %c\n", pop(&root));			
+					pop(&root);			
 				}
 
 		if(strcmp(buff, "exit")) printf("Rezultat je: %d\n\n", res);
 	}
-
-
-
 	return 0;
 
 }
