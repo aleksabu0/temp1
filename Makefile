@@ -1,7 +1,7 @@
 # If KERNELRELEASE is defined, we've been invoked from
 # kernel build system and can use its language.
 ifneq ($(KERNELRELEASE),)
-	obj-m := AluMult.o
+	obj-m := Alu.o
 # Otherwise we were called directly from the command
 # line; invoke the kernel build system.
 else
@@ -12,8 +12,9 @@ PWD := $(shell pwd)
 
 default:
 	$(MAKE) -C $(KERNELDIR) M=$(PWD) modules
+	gcc -o apl Aplikacija.c
 clean:
 	$(MAKE) -C $(KERNELDIR) M=$(PWD) clean
 	rm -f *~
-
+	rm apl
 endif
