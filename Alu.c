@@ -88,7 +88,6 @@ ssize_t alu_read(struct file *pfile, char __user *buffer, size_t length, loff_t 
 		}
 		else if (form==2)
 		{
-			//konverzija u binarni kod
 			int i;
 			int a[10];
 			int n=alu[pos1];
